@@ -36,6 +36,10 @@ runomp: run.c
 	$(CC) -Ofast -fopenmp -march=native run.c  -lm  -o run
 	$(CC) -Ofast -fopenmp -march=native runq.c  -lm  -o runq
 
+.PHONY: runavx
+runavx: run.c
+	$(CC) -Ofast -mavx -march=native -DAVX run.c  -lm  -o run
+
 .PHONY: win64
 win64:
 	x86_64-w64-mingw32-gcc -Ofast -D_WIN32 -o run.exe -I. run.c win.c
