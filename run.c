@@ -217,25 +217,29 @@ void softmax(float* x, int size) {
 
 #ifdef AVX
 #include <immintrin.h>
-
 void matmul(float* xout, float* x, float* w, int n, int d) {
+    
     const int parallelization_row_nums = 8;
     int i;
     int parallel_rows = d - d%parallelization_row_nums;
     __m256 result_register, x_register, w_register;
+
+    // The outer loop loops over the rows of W
     #pragma omp parallel for private(i, result_register, x_register, w_register)
     for(int i=0; i<parallel_rows; i+=8){
-        // printf("Start val at %d: %d, %d\n\n", i, xout[i], xout[i+8]);
         result_register = _mm256_set1_ps(0);
+        #pragma unroll
+        // The inner loop loops over the columns of W and the corrsponding value with which x is multiplied.
+        // Using the fmadd, accumilate the sum of products into the result and store it.
         for(int j=0; j<n; j++){
-            x_register = _mm256_set_ps(x[i*n + j], x[(i+1)*n + j], x[(i+2)*n + j], x[(i+3)*n + j],
-                                              x[(i+4)*n + j], x[(i+5)*n + j], x[(i+6)*n + j], x[(i+7)*n + j]);
-            w_register = _mm256_set1_ps(w[j]);
-            // printf("%d: %d\n", i, j);
+            w_register = _mm256_set_ps(w[(i+7)*n + j], w[(i+6)*n + j], w[(i+5)*n + j], w[(i+4)*n + j],
+                                        w[(i+3)*n + j], w[(i+2)*n + j], w[(i+1)*n + j], w[i*n + j]);
+            x_register = _mm256_set1_ps(x[j]);
             result_register = _mm256_fmadd_ps(x_register, w_register, result_register);
         }
-        // _mm256_storeu_ps(&xout[i], result_register);
+        _mm256_storeu_ps(&xout[i], result_register);
     }
+    //
     #pragma omp parallel for private(i)
     for(i=parallel_rows; i<d; i++){
         float val = 0.0f;

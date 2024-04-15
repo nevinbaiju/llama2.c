@@ -36,9 +36,15 @@ runomp: run.c
 	$(CC) -Ofast -fopenmp -march=native run.c  -lm  -o run
 	$(CC) -Ofast -fopenmp -march=native runq.c  -lm  -o runq
 
+# Compiles with AVX.
 .PHONY: runavx
 runavx: run.c
-	$(CC) -Ofast -mavx -march=native -DAVX run.c  -lm  -o run
+	$(CC) -O3 -mavx -march=native -DAVX run.c  -lm  -o run
+
+# Compiles with AVX and OpenMP.
+.PHONY: runavxomp
+runavx: run.c
+	$(CC) -O3 -mavx -fopenmp -march=native -DAVX run.c  -lm  -o run
 
 .PHONY: win64
 win64:
